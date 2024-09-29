@@ -2,15 +2,33 @@
 #include "stat.h"
 #include "user.h"
 #include "fcntl.h"
+#include "param.h"
+#include "syscall.h"
 
 #define NULL ((void*)0)
 #define MAX_DEFS 10
-#define MAX_LINE_LEN 1024
+#define MAX_LINE_LEN 4096
+#define INITIAL_BUFFER_SIZE 8192
+#define BUFFER_GROWTH_FACTOR 2
+#define PGSIZE 4096
+#define PRINT_CHUNK_SIZE 256
+
 
 typedef struct {
     char *var;
     char *val;
 } Definition;
+
+char* my_sbrk(int n) {
+    return sbrk(n);
+}
+
+void* my_malloc(uint size) {
+    char* p = my_sbrk(size);
+    if (p == (char*)-1)
+        return 0;
+    return p;
+}
 
 // Custom implementation of strlen
 int my_strlen(const char *s) {
@@ -43,11 +61,18 @@ char *my_strchr(const char *s, char c) {
     return NULL;
 }
 
+int isalnum(char c) {
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
+}
+
+
 // Custom implementation of strstr
 char *my_strstr(const char *haystack, const char *needle) {
     int needle_len = my_strlen(needle);
     for (; *haystack; haystack++) {
-        if (my_strncmp(haystack, needle, needle_len) == 0) {
+        if ((!haystack || !isalnum(*(haystack-1))) &&
+            (my_strncmp(haystack, needle, needle_len) == 0) &&
+            (!*(haystack + needle_len) || !isalnum(*(haystack + needle_len)))) {
             return (char *)haystack;
         }
     }
@@ -72,21 +97,32 @@ void *my_memmove(void *dest, const void *src, int n) {
     return dest;
 }
 
-// Substitute variables in the line
-void substitute(char *line, Definition defs[], int def_count) {
+void substitute(char *buffer, Definition defs[], int def_count, int *total_size, int *buffer_size) {
     for (int i = 0; i < def_count; i++) {
-        char *pos;
-        while ((pos = my_strstr(line, defs[i].var)) != NULL) {
-            int len_before = pos - line;
+        char *pos = buffer;
+        while ((pos = my_strstr(pos, defs[i].var)) != NULL) {
             int var_len = my_strlen(defs[i].var);
             int val_len = my_strlen(defs[i].val);
+            int rest_len = my_strlen(pos + var_len);
 
-            char new_line[MAX_LINE_LEN];
-            my_memmove(new_line, line, len_before); // Copy up to the match
-            my_memmove(new_line + len_before, defs[i].val, val_len); // Copy the value
-            my_memmove(new_line + len_before + val_len, pos + var_len, my_strlen(pos + var_len) + 1); // Copy the rest
+            // Check if buffer needs to grow
+            if (*total_size + (val_len - var_len) > *buffer_size) {
+                *buffer_size *= BUFFER_GROWTH_FACTOR;
+                char *new_buffer = my_malloc(*buffer_size);
+                if (!new_buffer) {
+                    printf(2, "Memory allocation failed during substitution\n");
+                    exit();
+                }
+                my_memmove(new_buffer, buffer, *total_size);
+                buffer = new_buffer;
+            }
 
-            my_memmove(line, new_line, my_strlen(new_line) + 1); // Update original line
+            if (val_len != var_len) {
+                my_memmove(pos + val_len, pos + var_len, rest_len + 1);
+            }
+            my_memmove(pos, defs[i].val, val_len);
+            pos += val_len;
+            *total_size += (val_len - var_len);
         }
     }
 }
@@ -125,18 +161,58 @@ int main(int argc, char *argv[]) {
     Definition defs[MAX_DEFS];
     int def_count = parse_definitions(argc, argv, defs);
 
-    char line[MAX_LINE_LEN];
+    char *buffer = my_malloc(INITIAL_BUFFER_SIZE);
+    if (!buffer) {
+        printf(2, "Initial memory allocation failed\n");
+        close(fd);
+        exit();
+    }
+
+    int buffer_size = INITIAL_BUFFER_SIZE;
+    int total_read = 0;
     int n;
-    
-    while ((n = read(fd, line, sizeof(line) - 1)) > 0) {
-        line[n] = '\0';  // Null-terminate
-        substitute(line, defs, def_count);  // Replace variables with values
-        printf(1, "%s", line);  // Print the modified line
+
+    while ((n = read(fd, buffer + total_read, buffer_size - total_read)) > 0) {
+        total_read += n;
+        if (total_read + PRINT_CHUNK_SIZE > buffer_size) {
+            buffer_size *= BUFFER_GROWTH_FACTOR;
+            char *new_buffer = my_malloc(buffer_size);
+            if (!new_buffer) {
+                printf(2, "Memory allocation failed\n");
+                close(fd);
+                exit();
+            }
+            my_memmove(new_buffer, buffer, total_read);
+            buffer = new_buffer;
+        }
     }
 
     if (n < 0) {
         printf(2, "Error reading file\n");
+        close(fd);
+        exit();
     }
+
+    buffer[total_read] = '\0';  // Null-terminate the entire input
+
+    // Process the entire buffer
+    substitute(buffer, defs, def_count, &total_read, &buffer_size);
+    // Debug output
+    // printf(2, "Total bytes read: %d\n", total_read);
+
+    // Print the processed content in one go
+    int printed = 0;
+    while (printed < total_read) {
+        n = write(1, buffer + printed, total_read - printed);
+        if (n <= 0) {
+            printf(2, "Error writing output\n");
+            break;
+        }
+        printed += n;
+    }
+
+    // Debug output
+    // printf(2, "\nTotal bytes printed: %d\n", printed);
 
     close(fd);
     exit();
