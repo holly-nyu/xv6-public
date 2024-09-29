@@ -97,7 +97,8 @@ void *my_memmove(void *dest, const void *src, int n) {
     return dest;
 }
 
-void substitute(char *buffer, Definition defs[], int def_count, int *total_size, int *buffer_size) {
+void substitute(char **buffer_ptr, Definition defs[], int def_count, int *total_size, int *buffer_size) {
+    char *buffer = *buffer_ptr;
     for (int i = 0; i < def_count; i++) {
         char *pos = buffer;
         while ((pos = my_strstr(pos, defs[i].var)) != NULL) {
@@ -114,7 +115,9 @@ void substitute(char *buffer, Definition defs[], int def_count, int *total_size,
                     exit();
                 }
                 my_memmove(new_buffer, buffer, *total_size);
+                pos = new_buffer + (pos - buffer);  // Update pos to point to the new buffer
                 buffer = new_buffer;
+                *buffer_ptr = buffer;  // Update the original buffer pointer
             }
 
             if (val_len != var_len) {
@@ -130,7 +133,7 @@ void substitute(char *buffer, Definition defs[], int def_count, int *total_size,
 // Parse command line definitions
 int parse_definitions(int argc, char *argv[], Definition defs[]) {
     int def_count = 0;
-    for (int i = 2; i < argc; i++) {
+    for (int i = 2; i < argc && def_count < MAX_DEFS; i++) {
         if (my_strncmp(argv[i], "-D", 2) == 0) {
             char *def = argv[i] + 2;
             char *equal_sign = my_strchr(def, '=');
@@ -138,6 +141,14 @@ int parse_definitions(int argc, char *argv[], Definition defs[]) {
                 *equal_sign = '\0';  // Split the string
                 defs[def_count].var = def;
                 defs[def_count].val = equal_sign + 1;
+                
+                // Remove quotes if present
+                int len = my_strlen(defs[def_count].val);
+                if (len > 1 && defs[def_count].val[0] == '"' && defs[def_count].val[len-1] == '"') {
+                    defs[def_count].val[len-1] = '\0';
+                    defs[def_count].val++;
+                }
+                
                 def_count++;
             }
         }
@@ -196,7 +207,7 @@ int main(int argc, char *argv[]) {
     buffer[total_read] = '\0';  // Null-terminate the entire input
 
     // Process the entire buffer
-    substitute(buffer, defs, def_count, &total_read, &buffer_size);
+    substitute(&buffer, defs, def_count, &total_read, &buffer_size);    
     // Debug output
     // printf(2, "Total bytes read: %d\n", total_read);
 
