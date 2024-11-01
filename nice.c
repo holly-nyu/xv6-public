@@ -2,6 +2,10 @@
 #include "stat.h"
 #include "user.h"
 
+#define MIN_NICE 1
+#define MAX_NICE 5
+#define DEFAULT_NICE 3
+
 int
 main(int argc, char *argv[])
 {
@@ -13,25 +17,28 @@ main(int argc, char *argv[])
   }
   
   if(argc == 2){
-    pid = 0;  // 0 means current process
+    pid = getpid(); // Get current process ID
     value = atoi(argv[1]);
   } else {
     pid = atoi(argv[1]);
     value = atoi(argv[2]);
   }
-  
-  int old_value = nice(pid, value);
-  
-  if(old_value < 0){
-    printf(2, "Error: Invalid PID or Value\n");
+
+  // Validate nice value
+  if(value < MIN_NICE || value > MAX_NICE) {
+    printf(2, "Error: Nice value must be between %d and %d\n", MIN_NICE, MAX_NICE);
     exit();
   }
+
+  int old_value = nice(pid, value);
   
-  if(pid == 0) {
-    pid = getpid();  // Get current process ID for output
+  if(old_value == -2) {
+      printf(2, "Error: Nice value must be between 1 and 5\n");
+      exit();
+  } else if(old_value < 0) {
+      printf(2, "Error: Invalid PID or Value\n");
+      exit();
   }
-  
   printf(1, "%d %d\n", pid, old_value);
-  
   exit();
 }

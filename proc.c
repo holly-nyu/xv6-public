@@ -88,7 +88,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-  p->nice = 20;  // Initialize nice value
+  p->nice = 3;  // Initialize nice value
   release(&ptable.lock);
 
   // Allocate kernel stack.
