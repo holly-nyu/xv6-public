@@ -540,18 +540,11 @@ nice(int pid, int value)
   int old_value = -1;
 
   acquire(&ptable.lock);
-  if(pid == 0) {
-    // Change nice value for current process
-    p = myproc();
-    old_value = p->nice;
-    p->nice = value;
-  } else {
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->pid == pid){
-        old_value = p->nice;
-        p->nice = value;
-        break;
-      }
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->pid == pid){
+      old_value = p->nice;
+      p->nice = value;
+      break;
     }
   }
   release(&ptable.lock);
@@ -559,7 +552,7 @@ nice(int pid, int value)
 }
 
 int
-ps()
+cps()
 {
     struct proc *p;
     sti(); // Enable interrupts

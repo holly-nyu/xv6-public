@@ -4,7 +4,6 @@
 
 #define MIN_NICE 1
 #define MAX_NICE 5
-#define DEFAULT_NICE 3
 
 int
 main(int argc, char *argv[])
@@ -32,13 +31,11 @@ main(int argc, char *argv[])
 
   int old_value = nice(pid, value);
   
-  if(old_value == -2) {
-      printf(2, "Error: Nice value must be between 1 and 5\n");
-      exit();
-  } else if(old_value < 0) {
-      printf(2, "Error: Invalid PID or Value\n");
-      exit();
+  if(old_value < 0){
+    printf(2, "Error: Invalid PID\n");
+    exit();
   }
+  
   printf(1, "%d %d\n", pid, old_value);
   exit();
 }
