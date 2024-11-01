@@ -146,11 +146,6 @@ int main(int argc, char *argv[]) {
     Definition defs[MAX_DEFS];
     int def_count = parse_definitions(argc, argv, defs);
 
-    // Debug print
-    for (int i = 0; i < def_count; i++) {
-        printf(2, "Definition %d: %s = %s\n", i, defs[i].var, defs[i].val);
-    }
-
     char line[MAX_LINE_LEN];
     int n;
     

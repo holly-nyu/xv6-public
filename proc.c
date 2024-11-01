@@ -88,7 +88,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-
+  p->nice = 20;  // Initialize nice value
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -531,4 +531,29 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+int
+nice(int pid, int value)
+{
+  struct proc *p;
+  int old_value = -1;
+
+  acquire(&ptable.lock);
+  if(pid == 0) {
+    // Change nice value for current process
+    p = myproc();
+    old_value = p->nice;
+    p->nice = value;
+  } else {
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->pid == pid){
+        old_value = p->nice;
+        p->nice = value;
+        break;
+      }
+    }
+  }
+  release(&ptable.lock);
+  return old_value;
 }
