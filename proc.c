@@ -557,3 +557,42 @@ nice(int pid, int value)
   release(&ptable.lock);
   return old_value;
 }
+
+int
+ps()
+{
+    struct proc *p;
+    sti(); // Enable interrupts
+    acquire(&ptable.lock);
+    cprintf("name \t pid \t state \t \t priority \n");
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+    {
+        // Search for process with pid in the process table
+        if(p->state == SLEEPING) {
+            cprintf("%s \t %d \t SLEEPING \t %d\n", p->name, p->pid, p->priority);
+        } else if(p->state == RUNNING) {
+            cprintf("%s \t %d \t RUNNING \t %d\n", p->name, p->pid, p->priority);
+        } else if(p->state == RUNNABLE) {
+            cprintf("%s \t %d \t RUNNABLE \t %d\n", p->name, p->pid, p->priority);
+        }  
+    }
+    release(&ptable.lock);
+    return 23; // In syscall.h
+}
+
+int
+setpriority(int pid, int priority)
+{
+    struct proc *p;
+
+    acquire(&ptable.lock);
+    for(p=ptable.proc; p<&ptable.proc[NPROC]; p++) {
+        if(p->pid == pid) {
+            p->priority = priority;
+            break;
+        }
+    }
+    release(&ptable.lock);
+    return pid;
+}
+
