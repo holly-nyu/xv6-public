@@ -4,6 +4,7 @@
 
 void test_specific_pid() {
     printf(1, "Test 1: Change nice value for PID 1\n");
+    nice(1,3); //setting nice value of PID 1 to default (3)
     int result = nice(1, 4);
     printf(1, "Expected:\tPID 1, Old value 3 (default is 3)\n");
     printf(1, "Actual:\t\tPID 1, Old value %d\n\n", result);
