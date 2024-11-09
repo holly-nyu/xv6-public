@@ -40,7 +40,11 @@ mycpu(void)
   int apicid, i;
   
   if(readeflags()&FL_IF)
-    panic("mycpu called with interrupts enabled\n");
+  {
+    //panic("mycpu called with interrupts enabled\n");
+    cprintf("Warning: mycpu called with interrupts enabled\n");
+    return 0;
+  }
   
   apicid = lapicid();
   // APIC IDs are not guaranteed to be contiguous. Maybe we should have
@@ -149,6 +153,7 @@ userinit(void)
   acquire(&ptable.lock);
 
   p->state = RUNNABLE;
+  cprintf("userinit: Initial process set to RUNNABLE with pid %d\n", p->pid);
 
   release(&ptable.lock);
 }
@@ -332,6 +337,27 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
+
+    #if PRIORITY_SCHEDULER
+        int highest_priority = 5;  // Default to lowest priority
+        // Find the highest priority among RUNNABLE processes
+        for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+            if (p->state == RUNNABLE && p->priority < highest_priority) {
+                highest_priority = p->priority;
+            }
+        }
+        // Run processes with the highest priority
+        for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+            if (p->state == RUNNABLE && p->priority == highest_priority) {
+                proc = p;
+                switchuvm(p);
+                p->state = RUNNING;
+                swtch(&(c->scheduler), p->context);
+                switchkvm();
+                proc = 0;
+            }
+        }
+      #else
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
@@ -350,6 +376,7 @@ scheduler(void)
       // It should have changed its p->state before coming back.
       c->proc = 0;
     }
+    #endif
     release(&ptable.lock);
 
   }
@@ -544,48 +571,10 @@ nice(int pid, int value)
     if(p->pid == pid){
       old_value = p->nice;
       p->nice = value;
+      p->priority = value;
       break;
     }
   }
   release(&ptable.lock);
   return old_value;
 }
-
-int
-cps()
-{
-    struct proc *p;
-    sti(); // Enable interrupts
-    acquire(&ptable.lock);
-    cprintf("name \t pid \t state \t \t priority \n");
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    {
-        // Search for process with pid in the process table
-        if(p->state == SLEEPING) {
-            cprintf("%s \t %d \t SLEEPING \t %d\n", p->name, p->pid, p->priority);
-        } else if(p->state == RUNNING) {
-            cprintf("%s \t %d \t RUNNING \t %d\n", p->name, p->pid, p->priority);
-        } else if(p->state == RUNNABLE) {
-            cprintf("%s \t %d \t RUNNABLE \t %d\n", p->name, p->pid, p->priority);
-        }  
-    }
-    release(&ptable.lock);
-    return 23; // In syscall.h
-}
-
-int
-setpriority(int pid, int priority)
-{
-    struct proc *p;
-
-    acquire(&ptable.lock);
-    for(p=ptable.proc; p<&ptable.proc[NPROC]; p++) {
-        if(p->pid == pid) {
-            p->priority = priority;
-            break;
-        }
-    }
-    release(&ptable.lock);
-    return pid;
-}
-

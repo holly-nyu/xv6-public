@@ -90,6 +90,16 @@ ifneq ($(shell $(CC) -dumpspecs 2>/dev/null | grep -e '[^f]nopie'),)
 CFLAGS += -fno-pie -nopie
 endif
 
+# Define scheduler type here
+SCHEDULER ?= ROUND_ROBIN
+
+# Add scheduler macro to CFLAGS
+ifeq ($(SCHEDULER), PRIORITY)
+    CFLAGS += -DPRIORITY_SCHEDULER
+else
+    CFLAGS += -DROUND_ROBIN_SCHEDULER
+endif
+
 xv6.img: bootblock kernel
 	dd if=/dev/zero of=xv6.img count=10000
 	dd if=bootblock of=xv6.img conv=notrunc
@@ -185,6 +195,10 @@ UPROGS=\
 	_preprocess\
 	_nice\
 	_test1\
+	_prime\
+	_test1p\
+	_test2p\
+	_test3p\
 	
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
