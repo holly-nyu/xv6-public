@@ -2,19 +2,22 @@
 
 This project implements a priority-based scheduling system in xv6, including a `nice` system call to adjust process priorities.
 
+## Setup
+The priority flag in `params.h` must be set to `0` for Round Robin, or `1` for our priority scheduler.
+
 ## Files to Run
 
-1. `test1p.c`: Tests two processes with different priorities
-2. `test2p.c`: Tests three processes with different priorities
-3. `test3p.c`: Tests two processes with the same priority
-4. `prime.c`: Helper program that prints prime numbers (used by test programs)
+1. `test1.c`: Tests various nice values
+2. `test1p.c`: Tests two processes with different priorities
+3. `test2p.c`: Tests three processes with different priorities
+4. `test3p.c`: Tests two processes with the same priority
+5. `prime.c`: Helper program that prints prime numbers (used by test programs)
 
 ## How to Run
 
 1. Compile xv6 with the modified files:
 ```
 make
-text
 ```
 
 2. Run xv6 in QEMU:
@@ -24,6 +27,7 @@ make qemu-nox
 
 3. Once in the xv6 shell, run the test programs:
 ```
+test1
 test1p
 test2p
 test3p
