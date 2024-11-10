@@ -12,4 +12,3 @@
 #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
 #define FSSIZE       1000  // size of file system in blocks
 #define PRIORITY     1 // Set to 1 for priority scheduler, 0 for Round Robin
-
