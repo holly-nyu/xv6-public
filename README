@@ -1,14 +1,45 @@
-halloween originated from the ancient celtic festival of samhain, celebrated around october 31. 
-this festival marked the end of the harvest season and the beginning of winter. celts believed that 
-on this night, the boundary between the living and the dead became blurred, allowing spirits to 
-roam the earth. to ward off these wandering souls, people would light bonfires and wear 
-costumes.over time, samhain evolved into a more christianized holiday known as all hallows' 
-eve, which was the night before all saints' day. by the 9th century, all hallows' eve was celebrated 
-with feasting and various customs, such as "souling," where the poor would go door to door 
-asking for food in exchange for prayers for the dead. in the 19th century, irish immigrants 
-brought halloween traditions to the united states, where it gained popularity. the practice of 
-carving pumpkins, known as jack-o'-lanterns, originated from the irish custom of hollowing out 
-turnips to create lanterns. as the holiday evolved, it became more focused on community 
-activities and fun, leading to the modern tradition of trick-or-treating. today, halloween is 
-celebrated with costumes, parties, and various spooky themes, embracing its rich history while 
-evolving into a festive occasion.
+# Priority-Based Scheduling in xv6
+
+This project implements a priority-based scheduling system in xv6, including a `nice` system call to adjust process priorities.
+
+## Files to Run
+
+1. `test1p.c`: Tests two processes with different priorities
+2. `test2p.c`: Tests three processes with different priorities
+3. `test3p.c`: Tests two processes with the same priority
+4. `prime.c`: Helper program that prints prime numbers (used by test programs)
+
+## How to Run
+
+1. Compile xv6 with the modified files:
+`make`
+
+2. Run xv6 in QEMU:
+`make qemu-nox`
+
+3. Once in the xv6 shell, run the test programs:
+`test1
+test1p
+test2p
+test3p`
+
+4. To test the `nice` system call directly:
+`nice <pid> <value>`
+or
+`nice <value>`
+
+
+## Explanation
+
+The PDF file accompanying this README includes detailed explanations and screenshots of the test cases. It covers:
+
+1. The implementation of the priority-based scheduler
+2. The `nice` system call implementation
+3. Detailed analysis of the output from `test1p`, `test2p`, and `test3p`
+4. Observations on how process priorities affect CPU time allocation
+
+Please refer to the PDF for a comprehensive understanding of the project implementation and test results.
+
+
+
+
