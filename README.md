@@ -7,11 +7,11 @@ The priority flag in `params.h` must be set to `0` for Round Robin, or `1` for o
 
 ## Files to Run
 
-1. `test1.c`: Tests various nice values
-2. `test1p.c`: Tests two processes with different priorities
-3. `test2p.c`: Tests three processes with different priorities
-4. `test3p.c`: Tests two processes with the same priority
-5. `prime.c`: Helper program that prints prime numbers (used by test programs)
+1. `test1.c`: Tests the nice system call
+2. `prime.c`: Helper program that prints prime numbers (used by test programs)
+3. `test1p.c`: Tests two processes with different priorities
+4. `test2p.c`: Tests three processes with different priorities
+5. `test3p.c`: Tests two processes with the same priority
 
 ## How to Run
 
