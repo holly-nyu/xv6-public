@@ -12,22 +12,31 @@ This project implements a priority-based scheduling system in xv6, including a `
 ## How to Run
 
 1. Compile xv6 with the modified files:
-`make`
+```
+make
+text
+```
 
 2. Run xv6 in QEMU:
-`make qemu-nox`
+```
+make qemu-nox
+```
 
 3. Once in the xv6 shell, run the test programs:
-`test1
+```
 test1p
 test2p
-test3p`
+test3p
+```
 
 4. To test the `nice` system call directly:
-`nice <pid> <value>`
+```
+nice <pid> <value>
+```
 or
-`nice <value>`
-
+```
+nice <value>
+```
 
 ## Explanation
 
@@ -39,7 +48,3 @@ The PDF file accompanying this README includes detailed explanations and screens
 4. Observations on how process priorities affect CPU time allocation
 
 Please refer to the PDF for a comprehensive understanding of the project implementation and test results.
-
-
-
-
